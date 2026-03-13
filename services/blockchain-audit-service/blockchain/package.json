@@ -1,0 +1,14 @@
+{
+  "name": "blockchain-audit-contracts",
+  "version": "1.0.0",
+  "description": "Hardhat project for AuditLogger smart contract",
+  "scripts": {
+    "node": "hardhat node",
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/deploy.js --network localhost"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "hardhat": "^2.19.0"
+  }
+}
