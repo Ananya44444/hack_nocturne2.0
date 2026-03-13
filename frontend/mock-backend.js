@@ -139,10 +139,10 @@ app.get('/api/patients', (req, res) => {
 // MPI
 app.get('/api/mpi', (_, res) => res.json({ mappings: mpiMappings, total: mpiMappings.length }));
 app.get('/api/mpi/resolve', (req, res) => {
-  const { local_id, hospital_id } = req.query;
-  const mapping = mpiMappings.find(m => m.local_id === local_id && m.hospital_id === hospital_id);
+  const { local_patient_id, hospital_id } = req.query;
+  const mapping = mpiMappings.find(m => m.local_id === local_patient_id && m.hospital_id === hospital_id);
   if (!mapping) return res.status(404).json({ error: 'No mapping found' });
-  res.json(mapping);
+  res.json({ global_patient_id: mapping.global_id, ...mapping });
 });
 
 // Consents
