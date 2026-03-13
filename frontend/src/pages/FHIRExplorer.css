@@ -1,0 +1,55 @@
+/* FHIR Explorer — Premium Dark Theme */
+.fhir-explorer {}
+
+/* JSON Tree Viewer */
+.fhir-viewer {}
+
+.fhir-viewer__body {
+  overflow-x: auto; max-height: 600px; overflow-y: auto;
+}
+
+.fhir-viewer__raw {
+  font-family: var(--mono); font-size: var(--text-sm);
+  background: rgba(0,0,0,0.4);
+  color: #a5f3fc;
+  padding: var(--sp-4); border-radius: var(--radius-md);
+  overflow-x: auto; line-height: 1.7; white-space: pre;
+  border: 1px solid var(--border-subtle);
+}
+
+.fhir-viewer__tree {
+  font-family: var(--mono); font-size: 13px; line-height: 1.8;
+  color: var(--text-secondary); padding: var(--sp-2);
+}
+
+/* JSON Nodes */
+.fhir__toggle {
+  background: none; border: none; cursor: pointer;
+  font-family: var(--mono); font-size: 13px;
+  color: var(--blue-light); font-weight: 700;
+  padding: 0 4px; border-radius: 3px;
+  transition: background var(--duration-fast);
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.fhir__toggle:hover { background: var(--blue-dim); }
+
+.fhir__nested { padding-left: var(--sp-5); border-left: 1.5px dashed rgba(59,130,246,0.2); margin-left: 4px; }
+
+.fhir__row { display: flex; align-items: baseline; flex-wrap: wrap; padding: 1px 0; }
+
+.fhir__key       { color: var(--blue-light); font-weight: 600; }
+.fhir__key--type { color: #93c5fd; font-weight: 800; }
+.fhir__colon     { color: var(--text-dim); margin: 0 4px; }
+.fhir__string    { color: var(--green); }
+.fhir__number    { color: var(--purple); font-weight: 700; }
+.fhir__bool      { color: var(--amber); font-weight: 700; }
+.fhir__null      { color: var(--text-dim); font-style: italic; }
+.fhir__bracket   { color: var(--text-muted); }
+.fhir__index     { color: var(--text-dim); font-weight: 700; }
+
+.fhir__resource-type {
+  font-weight: 800; color: #93c5fd;
+  background: var(--blue-dim);
+  border: 1px solid var(--blue-glow);
+  padding: 0 6px; border-radius: 4px; font-size: 12px;
+}

@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+env/
+.env
+
+# NodeJS (from the legacy /blockchain directory)
+node_modules/
+*.log
+npm-debug.log*
+
+# SQLite Database (don't commit the live DB with audit logs)
+*.db
+*.sqlite3
+
+# Hardhat (if initialized inside /blockchain later)
+cache/
+artifacts/
+typechain-types/
+
+# IDE/OS
+.vscode/
+.idea/
+.DS_Store

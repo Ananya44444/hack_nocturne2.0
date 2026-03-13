@@ -1,0 +1,44 @@
+/* Consent Page — Premium Dark Theme */
+.consent {}
+
+.consent__toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--sp-4); margin-bottom: var(--sp-4); flex-wrap: wrap;
+}
+
+.consent__filters { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+
+.consent__filter-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+  color: var(--text-muted);
+  font-size: var(--text-sm); font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+.consent__filter-btn:hover {
+  background: var(--blue-dim);
+  border-color: var(--blue-glow);
+  color: var(--blue-light);
+}
+.consent__filter-btn.active {
+  background: var(--grad-blue);
+  border-color: var(--blue);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(59,130,246,0.3);
+}
+
+.consent__filter-count {
+  background: rgba(255,255,255,0.2);
+  border-radius: var(--radius-full);
+  padding: 1px 7px; font-size: 11px; font-weight: 700;
+}
+.consent__filter-btn:not(.active) .consent__filter-count {
+  background: rgba(255,255,255,0.06); color: var(--text-muted);
+}
+
+.consent__form { margin-bottom: var(--sp-4); }
