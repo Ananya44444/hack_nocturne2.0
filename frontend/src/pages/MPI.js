@@ -32,10 +32,10 @@ export default function MPI({ backendUrl }) {
         const data = res.data?.patients || res.data || [];
         if (data.length > 0) {
           setRecords(data.map(p => ({
-            global_id: p.global_id,
-            local_id: p.id || p.local_id,
+            global_id: p.global_id || p.id,
+            local_id: p.local_patient_id || p.local_id || p.id,
             hospital_id: p.hospital_id || 'HOSP_001',
-            name: `${p.first_name} ${p.last_name}`,
+            name: p.name || `${p.given_name || p.first_name || ''} ${p.family_name || p.last_name || ''}`.trim(),
             created_at: p.created_at || new Date().toISOString().slice(0,10)
           })));
         }
@@ -51,7 +51,7 @@ export default function MPI({ backendUrl }) {
     setLooking(true);
     setLookupResult(null);
     try {
-      const res = await API.get(`/api/mpi/resolve`, { params: { local_id: lookupLocal, hospital_id: lookupHospital } });
+      const res = await API.get(`/api/mpi/resolve`, { params: { local_patient_id: lookupLocal, hospital_id: lookupHospital } });
       setLookupResult({ found: true, data: res.data });
     } catch {
       // Fallback to mock search
