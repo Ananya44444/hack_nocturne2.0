@@ -1,7 +1,9 @@
 """Audit router — list events, verify hash integrity."""
 
 from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from typing import Optional
 
 from app.database import get_db
 from app.schemas.audit import AuditEventResponse, AuditEventListResponse, AuditVerifyResponse
@@ -46,3 +48,46 @@ def verify_audit_event(
     """
     result = audit_service.verify_event(db=db, event_id=event_id)
     return AuditVerifyResponse(**result)
+
+
+class AuditLogRequest(BaseModel):
+    """Payload accepted from trusted microservices to log an audit event."""
+    event_type: str
+    actor_hospital_id: str
+    actor_service: str
+    outcome: str
+    subject_patient_id: Optional[str] = None
+    resource_type: Optional[str] = None
+    resource_id: Optional[str] = None
+    failure_reason: Optional[str] = None
+    dedup_key: Optional[str] = None  # used by microservice layer for dedup tracking
+
+
+@router.post("/log", response_model=AuditEventResponse, status_code=201)
+def log_audit_event(
+    body: AuditLogRequest,
+    hospital: AuthenticatedHospital = Depends(get_current_hospital),
+    db: Session = Depends(get_db),
+):
+    """
+    Accept an audit event from a trusted microservice (e.g. fhir-microservice).
+    Stores it with the same SHA-256 hash as internally generated events.
+    dedup_key is stored in failure_reason field if no failure_reason is provided,
+    so analytics can suppress duplicate events without a schema migration.
+    """
+    failure_reason = body.failure_reason
+    if not failure_reason and body.dedup_key:
+        failure_reason = f"dedup:{body.dedup_key}"
+
+    event = audit_service.log_event(
+        db=db,
+        event_type=body.event_type,
+        actor_hospital_id=body.actor_hospital_id,
+        actor_service=body.actor_service,
+        outcome=body.outcome,
+        subject_patient_id=body.subject_patient_id,
+        resource_type=body.resource_type,
+        resource_id=body.resource_id,
+        failure_reason=failure_reason,
+    )
+    return AuditEventResponse.model_validate(event)

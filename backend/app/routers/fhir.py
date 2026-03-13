@@ -9,8 +9,10 @@ Implements the core data access workflow:
 """
 
 import uuid
+import logging
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -21,6 +23,9 @@ from app.schemas.patient import PatientIngest, PatientIngestResponse
 from app.schemas.observation import ObservationCreate, ObservationResponse
 from app.services.auth import get_current_hospital, AuthenticatedHospital
 from app.services import consent_service, audit_service, fhir_service, mpi_service
+
+logger = logging.getLogger("backend.fhir")
+logger.setLevel(logging.INFO)
 
 router = APIRouter(prefix="/api", tags=["FHIR Service"])
 
@@ -40,7 +45,7 @@ def _consent_gate(db: Session, patient_id: str, hospital: AuthenticatedHospital)
         institution_id=hospital.hospital_id,
     )
 
-    if not validation["valid"]:
+    if not validation.get("valid", False):
         # Log ACCESS_DENIED event
         event = audit_service.log_event(
             db=db,
@@ -51,16 +56,16 @@ def _consent_gate(db: Session, patient_id: str, hospital: AuthenticatedHospital)
             subject_patient_id=patient_id,
             resource_type="Patient",
             resource_id=patient_id,
-            failure_reason=validation["reason"],
+            failure_reason=validation.get("reason"),
         )
 
         raise HTTPException(
-            status_code=403,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail={
                 "error": True,
-                "code": validation["reason"],
-                "message": f"Access denied: {validation['reason']}",
-                "event_id": event.event_id,
+                "code": validation.get("reason", "CONSENT_DENIED"),
+                "message": f"Access denied: {validation.get('reason', 'consent check failed')}",
+                "event_id": getattr(event, "event_id", None),
             },
         )
 
@@ -81,7 +86,7 @@ def get_patient_resource(
     resource = fhir_service.get_patient_resource(db, patient_id)
     if not resource:
         raise HTTPException(
-            status_code=404,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "error": True,
                 "code": "PATIENT_NOT_FOUND",
@@ -101,6 +106,7 @@ def get_patient_resource(
         resource_id=patient_id,
     )
 
+    # Return resource as built by fhir_service (expected to be FHIR JSON/dict)
     return resource
 
 
@@ -120,7 +126,7 @@ def get_bundle(
     bundle = fhir_service.build_bundle(db, patient_id)
     if not bundle:
         raise HTTPException(
-            status_code=404,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "error": True,
                 "code": "PATIENT_NOT_FOUND",
@@ -128,7 +134,7 @@ def get_bundle(
             },
         )
 
-    # Log DATA_ACCESS event
+    # Log DATA_ACCESS event — resource_type must be "Bundle" here.
     audit_service.log_event(
         db=db,
         event_type="DATA_ACCESS",
@@ -136,7 +142,7 @@ def get_bundle(
         actor_service="fhir-service",
         outcome="SUCCESS",
         subject_patient_id=patient_id,
-        resource_type="Patient",
+        resource_type="Bundle",
         resource_id=patient_id,
     )
 
@@ -153,10 +159,10 @@ def get_observation(
     obs = db.query(Observation).filter(Observation.id == observation_id).first()
     if not obs:
         raise HTTPException(
-            status_code=404,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "error": True,
-                "code": "PATIENT_NOT_FOUND",
+                "code": "OBSERVATION_NOT_FOUND",
                 "message": f"Observation '{observation_id}' not found.",
             },
         )
@@ -180,7 +186,44 @@ def get_observation(
     return resource
 
 
-@router.post("/observation", status_code=201)
+@router.get("/encounter/{encounter_id}")
+def get_encounter_resource(
+    encounter_id: str,
+    hospital: AuthenticatedHospital = Depends(get_current_hospital),
+    db: Session = Depends(get_db),
+):
+    """Get a FHIR Encounter resource by ID."""
+    enc = db.query(Encounter).filter(Encounter.id == encounter_id).first()
+    if not enc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "error": True,
+                "code": "ENCOUNTER_NOT_FOUND",
+                "message": f"Encounter '{encounter_id}' not found.",
+            },
+        )
+
+    # Consent check on the owning patient
+    _consent_gate(db, enc.patient_id, hospital)
+
+    resource = fhir_service.build_encounter_resource(enc)
+
+    audit_service.log_event(
+        db=db,
+        event_type="DATA_ACCESS",
+        actor_hospital_id=hospital.hospital_id,
+        actor_service="fhir-service",
+        outcome="SUCCESS",
+        subject_patient_id=enc.patient_id,
+        resource_type="Encounter",
+        resource_id=encounter_id,
+    )
+
+    return resource
+
+
+@router.post("/observation", status_code=status.HTTP_201_CREATED)
 def create_observation(
     body: ObservationCreate,
     hospital: AuthenticatedHospital = Depends(get_current_hospital),
@@ -202,10 +245,12 @@ def create_observation(
     db.add(obs)
     db.commit()
     db.refresh(obs)
+
+    # Build response using schema (ObservationResponse) for consistent shape
     return ObservationResponse.model_validate(obs)
 
 
-@router.post("/patient/ingest", status_code=201)
+@router.post("/patient/ingest", status_code=status.HTTP_201_CREATED)
 def ingest_patient(
     body: PatientIngest,
     hospital: AuthenticatedHospital = Depends(get_current_hospital),
@@ -277,12 +322,36 @@ def ingest_patient(
             db.add(enc)
             enc_count += 1
 
-    db.commit()
+    # Commit everything in one transaction; rollback on error
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.exception("DB commit failed during patient ingest")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": True, "code": "DB_COMMIT_FAILED", "message": "Failed to persist patient data."},
+        )
+
+    # Build FHIR Patient resource using fhir_service (should return FHIR JSON/dict)
+    fhir_patient = fhir_service.build_patient_resource(patient)
+
+    # Log DATA_ACCESS (ingest event) or any other audit as needed
+    audit_service.log_event(
+        db=db,
+        event_type="DATA_ACCESS",
+        actor_hospital_id=hospital.hospital_id,
+        actor_service="fhir-service",
+        outcome="SUCCESS",
+        subject_patient_id=global_id,
+        resource_type="Patient",
+        resource_id=global_id,
+    )
 
     return PatientIngestResponse(
         global_id=global_id,
         hospital_id=hospital.hospital_id,
-        patient=fhir_service.build_patient_resource(patient),
+        patient=fhir_patient,
         observations_created=obs_count,
         encounters_created=enc_count,
     )
