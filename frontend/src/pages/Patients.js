@@ -2,21 +2,21 @@ import React, { useState, useEffect } from 'react';
 import API from '../services/api';
 import './Patients.css';
 
-const MOCK_PATIENTS = [
-  { id: 'PAT-GLB-001', local_id: 'LOC-001', hospital_id: 'HOSP_001', name: 'Alice Johnson',    dob: '1985-03-12', gender: 'female', blood_type: 'A+', diagnoses: ['Hypertension', 'Diabetes T2'] },
-  { id: 'PAT-GLB-002', local_id: 'LOC-002', hospital_id: 'HOSP_001', name: 'Bob Martinez',     dob: '1972-07-08', gender: 'male',   blood_type: 'O-', diagnoses: ['Coronary Artery Disease'] },
-  { id: 'PAT-GLB-003', local_id: 'LOC-003', hospital_id: 'HOSP_001', name: 'Carol Williams',   dob: '1990-11-25', gender: 'female', blood_type: 'B+', diagnoses: ['Asthma'] },
-  { id: 'PAT-GLB-004', local_id: 'LOC-004', hospital_id: 'HOSP_002', name: 'David Chen',       dob: '1965-01-30', gender: 'male',   blood_type: 'AB+',diagnoses: ['Chronic Kidney Disease'] },
-  { id: 'PAT-GLB-005', local_id: 'LOC-005', hospital_id: 'HOSP_002', name: 'Eva Rodriguez',    dob: '1995-06-14', gender: 'female', blood_type: 'A-', diagnoses: ['Anxiety Disorder'] },
-  { id: 'PAT-GLB-006', local_id: 'LOC-006', hospital_id: 'HOSP_003', name: 'Frank Thompson',   dob: '1958-09-03', gender: 'male',   blood_type: 'O+', diagnoses: ['COPD', 'Heart Failure'] },
-  { id: 'PAT-GLB-007', local_id: 'LOC-007', hospital_id: 'HOSP_003', name: 'Grace Lee',        dob: '2001-04-22', gender: 'female', blood_type: 'B-', diagnoses: ['Juvenile Diabetes'] },
-];
+// const MOCK_PATIENTS = [
+//   { id: 'PAT-GLB-001', local_id: 'LOC-001', hospital_id: 'HOSP_001', name: 'Alice Johnson',    dob: '1985-03-12', gender: 'female', blood_type: 'A+', diagnoses: ['Hypertension', 'Diabetes T2'] },
+//   { id: 'PAT-GLB-002', local_id: 'LOC-002', hospital_id: 'HOSP_001', name: 'Bob Martinez',     dob: '1972-07-08', gender: 'male',   blood_type: 'O-', diagnoses: ['Coronary Artery Disease'] },
+//   { id: 'PAT-GLB-003', local_id: 'LOC-003', hospital_id: 'HOSP_001', name: 'Carol Williams',   dob: '1990-11-25', gender: 'female', blood_type: 'B+', diagnoses: ['Asthma'] },
+//   { id: 'PAT-GLB-004', local_id: 'LOC-004', hospital_id: 'HOSP_002', name: 'David Chen',       dob: '1965-01-30', gender: 'male',   blood_type: 'AB+',diagnoses: ['Chronic Kidney Disease'] },
+//   { id: 'PAT-GLB-005', local_id: 'LOC-005', hospital_id: 'HOSP_002', name: 'Eva Rodriguez',    dob: '1995-06-14', gender: 'female', blood_type: 'A-', diagnoses: ['Anxiety Disorder'] },
+//   { id: 'PAT-GLB-006', local_id: 'LOC-006', hospital_id: 'HOSP_003', name: 'Frank Thompson',   dob: '1958-09-03', gender: 'male',   blood_type: 'O+', diagnoses: ['COPD', 'Heart Failure'] },
+//   { id: 'PAT-GLB-007', local_id: 'LOC-007', hospital_id: 'HOSP_003', name: 'Grace Lee',        dob: '2001-04-22', gender: 'female', blood_type: 'B-', diagnoses: ['Juvenile Diabetes'] },
+// ];
 
-const HOSPITAL_NAMES = {
-  HOSP_001: 'City General',
-  HOSP_002: "St. Mary's",
-  HOSP_003: 'Northwest Clinic',
-};
+// const HOSPITAL_NAMES = {
+//   HOSP_001: 'City General',
+//   HOSP_002: "St. Mary's",
+//   HOSP_003: 'Northwest Clinic',
+// };
 
 function age(dob) {
   if (!dob) return '—';
@@ -25,8 +25,8 @@ function age(dob) {
 
 export default function Patients({ backendUrl }) {
   const [patients, setPatients] = useState(MOCK_PATIENTS);
-  const [loading, setLoading]   = useState(true);
-  const [search, setSearch]     = useState('');
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [hospFilter, setHospFilter] = useState('all');
   const [expanded, setExpanded] = useState(null);
 
@@ -56,7 +56,7 @@ export default function Patients({ backendUrl }) {
 
   const filtered = patients.filter(p => {
     const matchSearch = !search || p.name?.toLowerCase().includes(search.toLowerCase()) || p.id?.toLowerCase().includes(search.toLowerCase());
-    const matchHosp   = hospFilter === 'all' || p.hospital_id === hospFilter;
+    const matchHosp = hospFilter === 'all' || p.hospital_id === hospFilter;
     return matchSearch && matchHosp;
   });
 

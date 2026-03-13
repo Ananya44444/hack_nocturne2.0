@@ -3,46 +3,46 @@ import API from '../services/api';
 import toast from 'react-hot-toast';
 import './FHIRExplorer.css';
 
-const EXAMPLE_BUNDLE = {
-  resourceType: 'Bundle',
-  id: 'fhir-bundle-PAT-GLB-001',
-  type: 'document',
-  timestamp: '2026-03-13T10:42:00Z',
-  entry: [
-    {
-      resource: {
-        resourceType: 'Patient',
-        id: 'PAT-GLB-001',
-        name: [{ use: 'official', family: 'Johnson', given: ['Alice'] }],
-        gender: 'female',
-        birthDate: '1985-03-12',
-        identifier: [{ system: 'urn:oid:hospital', value: 'LOC-001' }],
-      }
-    },
-    {
-      resource: {
-        resourceType: 'Observation',
-        id: 'OBS-001',
-        status: 'final',
-        code: { text: 'Blood Pressure' },
-        valueQuantity: { value: 130, unit: 'mmHg', system: 'http://unitsofmeasure.org' },
-        subject: { reference: 'Patient/PAT-GLB-001' },
-        effectiveDateTime: '2026-03-10T09:00:00Z',
-      }
-    },
-    {
-      resource: {
-        resourceType: 'Encounter',
-        id: 'ENC-001',
-        status: 'finished',
-        class: { code: 'AMB', display: 'Ambulatory' },
-        type: [{ text: 'Cardiology Consultation' }],
-        subject: { reference: 'Patient/PAT-GLB-001' },
-        period: { start: '2026-03-10T09:00:00Z', end: '2026-03-10T10:00:00Z' },
-      }
-    }
-  ]
-};
+// const EXAMPLE_BUNDLE = {
+//   resourceType: 'Bundle',
+//   id: 'fhir-bundle-PAT-GLB-001',
+//   type: 'document',
+//   timestamp: '2026-03-13T10:42:00Z',
+//   entry: [
+//     {
+//       resource: {
+//         resourceType: 'Patient',
+//         id: 'PAT-GLB-001',
+//         name: [{ use: 'official', family: 'Johnson', given: ['Alice'] }],
+//         gender: 'female',
+//         birthDate: '1985-03-12',
+//         identifier: [{ system: 'urn:oid:hospital', value: 'LOC-001' }],
+//       }
+//     },
+//     {
+//       resource: {
+//         resourceType: 'Observation',
+//         id: 'OBS-001',
+//         status: 'final',
+//         code: { text: 'Blood Pressure' },
+//         valueQuantity: { value: 130, unit: 'mmHg', system: 'http://unitsofmeasure.org' },
+//         subject: { reference: 'Patient/PAT-GLB-001' },
+//         effectiveDateTime: '2026-03-10T09:00:00Z',
+//       }
+//     },
+//     {
+//       resource: {
+//         resourceType: 'Encounter',
+//         id: 'ENC-001',
+//         status: 'finished',
+//         class: { code: 'AMB', display: 'Ambulatory' },
+//         type: [{ text: 'Cardiology Consultation' }],
+//         subject: { reference: 'Patient/PAT-GLB-001' },
+//         period: { start: '2026-03-10T09:00:00Z', end: '2026-03-10T10:00:00Z' },
+//       }
+//     }
+//   ]
+// };
 
 function JsonNode({ data, depth = 0 }) {
   const [collapsed, setCollapsed] = useState(depth > 2);
@@ -102,12 +102,12 @@ function JsonNode({ data, depth = 0 }) {
 }
 
 export default function FHIRExplorer({ backendUrl }) {
-  const [globalId, setGlobalId]     = useState('PAT-GLB-001');
+  const [globalId, setGlobalId] = useState('PAT-GLB-001');
   const [hospitalId, setHospitalId] = useState('HOSP_002');
-  const [bundle, setBundle]         = useState(null);
-  const [loading, setLoading]       = useState(false);
-  const [rawMode, setRawMode]       = useState(false);
-  const [error, setError]           = useState('');
+  const [bundle, setBundle] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [rawMode, setRawMode] = useState(false);
+  const [error, setError] = useState('');
 
   const fetchBundle = async () => {
     if (!globalId.trim()) { toast.error('Enter a patient Global ID'); return; }
@@ -199,7 +199,7 @@ export default function FHIRExplorer({ backendUrl }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
               {[
                 { icon: '📦', label: 'Bundle', desc: 'Container for a set of resources (document, transaction, etc.)' },
-                { icon: '👤', label: 'Patient',  desc: 'Demographics and administrative info about a subject of care' },
+                { icon: '👤', label: 'Patient', desc: 'Demographics and administrative info about a subject of care' },
                 { icon: '🔬', label: 'Observation', desc: 'Measurements & simple assertions (vitals, lab results)' },
                 { icon: '🏥', label: 'Encounter', desc: 'An interaction between patient and healthcare provider' },
                 { icon: '🔐', label: 'Consent Gate', desc: 'Access controlled — must have active consent to receive bundle' },
