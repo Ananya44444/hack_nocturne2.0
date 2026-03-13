@@ -3,44 +3,44 @@ import API from '../services/api';
 import toast from 'react-hot-toast';
 import './Hospitals.css';
 
-const MOCK_HOSPITALS = [
-  {
-    id: 'HOSP_001',
-    name: 'City General Hospital',
-    location: 'New York, NY',
-    api_key: 'key_001',
-    patient_count: 3,
-    status: 'active',
-    specialties: ['Cardiology', 'Oncology', 'Neurology'],
-    joined: '2025-01-15',
-  },
-  {
-    id: 'HOSP_002',
-    name: "St. Mary's Medical Center",
-    location: 'Los Angeles, CA',
-    api_key: 'key_002',
-    patient_count: 2,
-    status: 'active',
-    specialties: ['Pediatrics', 'Emergency'],
-    joined: '2025-02-10',
-  },
-  {
-    id: 'HOSP_003',
-    name: 'Northwest Regional Clinic',
-    location: 'Seattle, WA',
-    api_key: 'key_003',
-    patient_count: 2,
-    status: 'active',
-    specialties: ['General Medicine', 'Orthopedics'],
-    joined: '2025-03-05',
-  },
-];
+// const MOCK_HOSPITALS = [
+//   {
+//     id: 'HOSP_001',
+//     name: 'City General Hospital',
+//     location: 'New York, NY',
+//     api_key: 'key_001',
+//     patient_count: 3,
+//     status: 'active',
+//     specialties: ['Cardiology', 'Oncology', 'Neurology'],
+//     joined: '2025-01-15',
+//   },
+//   {
+//     id: 'HOSP_002',
+//     name: "St. Mary's Medical Center",
+//     location: 'Los Angeles, CA',
+//     api_key: 'key_002',
+//     patient_count: 2,
+//     status: 'active',
+//     specialties: ['Pediatrics', 'Emergency'],
+//     joined: '2025-02-10',
+//   },
+//   {
+//     id: 'HOSP_003',
+//     name: 'Northwest Regional Clinic',
+//     location: 'Seattle, WA',
+//     api_key: 'key_003',
+//     patient_count: 2,
+//     status: 'active',
+//     specialties: ['General Medicine', 'Orthopedics'],
+//     joined: '2025-03-05',
+//   },
+// ];
 
 export default function Hospitals({ backendUrl }) {
   const [hospitals, setHospitals] = useState(MOCK_HOSPITALS);
-  const [loading, setLoading]     = useState(true);
-  const [search, setSearch]       = useState('');
-  const [selected, setSelected]   = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     let alive = true;

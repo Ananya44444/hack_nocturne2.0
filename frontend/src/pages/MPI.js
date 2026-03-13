@@ -2,26 +2,26 @@ import React, { useState, useEffect } from 'react';
 import API from '../services/api';
 import toast from 'react-hot-toast';
 
-const MOCK_MPI = [
-  { global_id: 'PAT-GLB-001', local_id: 'LOC-001', hospital_id: 'HOSP_001', name: 'Alice Johnson',  created_at: '2025-01-20' },
-  { global_id: 'PAT-GLB-002', local_id: 'LOC-002', hospital_id: 'HOSP_001', name: 'Bob Martinez',   created_at: '2025-01-21' },
-  { global_id: 'PAT-GLB-003', local_id: 'LOC-003', hospital_id: 'HOSP_001', name: 'Carol Williams', created_at: '2025-01-22' },
-  { global_id: 'PAT-GLB-004', local_id: 'LOC-004', hospital_id: 'HOSP_002', name: 'David Chen',     created_at: '2025-02-10' },
-  { global_id: 'PAT-GLB-005', local_id: 'LOC-005', hospital_id: 'HOSP_002', name: 'Eva Rodriguez',  created_at: '2025-02-11' },
-  { global_id: 'PAT-GLB-006', local_id: 'LOC-006', hospital_id: 'HOSP_003', name: 'Frank Thompson', created_at: '2025-03-05' },
-  { global_id: 'PAT-GLB-007', local_id: 'LOC-007', hospital_id: 'HOSP_003', name: 'Grace Lee',      created_at: '2025-03-06' },
-];
+// const MOCK_MPI = [
+//   { global_id: 'PAT-GLB-001', local_id: 'LOC-001', hospital_id: 'HOSP_001', name: 'Alice Johnson',  created_at: '2025-01-20' },
+//   { global_id: 'PAT-GLB-002', local_id: 'LOC-002', hospital_id: 'HOSP_001', name: 'Bob Martinez',   created_at: '2025-01-21' },
+//   { global_id: 'PAT-GLB-003', local_id: 'LOC-003', hospital_id: 'HOSP_001', name: 'Carol Williams', created_at: '2025-01-22' },
+//   { global_id: 'PAT-GLB-004', local_id: 'LOC-004', hospital_id: 'HOSP_002', name: 'David Chen',     created_at: '2025-02-10' },
+//   { global_id: 'PAT-GLB-005', local_id: 'LOC-005', hospital_id: 'HOSP_002', name: 'Eva Rodriguez',  created_at: '2025-02-11' },
+//   { global_id: 'PAT-GLB-006', local_id: 'LOC-006', hospital_id: 'HOSP_003', name: 'Frank Thompson', created_at: '2025-03-05' },
+//   { global_id: 'PAT-GLB-007', local_id: 'LOC-007', hospital_id: 'HOSP_003', name: 'Grace Lee',      created_at: '2025-03-06' },
+// ];
 
-const HOSP_NAMES = { HOSP_001: 'City General', HOSP_002: "St. Mary's", HOSP_003: 'Northwest Clinic' };
+// const HOSP_NAMES = { HOSP_001: 'City General', HOSP_002: "St. Mary's", HOSP_003: 'Northwest Clinic' };
 
 export default function MPI({ backendUrl }) {
-  const [records, setRecords]     = useState(MOCK_MPI);
-  const [loading, setLoading]     = useState(true);
-  const [search, setSearch]       = useState('');
-  const [lookupLocal, setLookupLocal]   = useState('');
+  const [records, setRecords] = useState(MOCK_MPI);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [lookupLocal, setLookupLocal] = useState('');
   const [lookupHospital, setLookupHospital] = useState('HOSP_001');
   const [lookupResult, setLookupResult] = useState(null);
-  const [looking, setLooking]     = useState(false);
+  const [looking, setLooking] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -36,7 +36,7 @@ export default function MPI({ backendUrl }) {
             local_id: p.local_patient_id || p.local_id || p.id,
             hospital_id: p.hospital_id || 'HOSP_001',
             name: p.name || `${p.given_name || p.first_name || ''} ${p.family_name || p.last_name || ''}`.trim(),
-            created_at: p.created_at || new Date().toISOString().slice(0,10)
+            created_at: p.created_at || new Date().toISOString().slice(0, 10)
           })));
         }
       } catch { /* mock */ }
@@ -137,8 +137,8 @@ export default function MPI({ backendUrl }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
               {[
                 { label: 'Total Registered Patients', value: records.length, color: 'var(--blue-600)' },
-                { label: 'Unique Hospitals',           value: new Set(records.map(r => r.hospital_id)).size, color: '#7c3aed' },
-                { label: 'Latest Registration',        value: records[records.length-1]?.created_at || '—', color: '#0d9488' },
+                { label: 'Unique Hospitals', value: new Set(records.map(r => r.hospital_id)).size, color: '#7c3aed' },
+                { label: 'Latest Registration', value: records[records.length - 1]?.created_at || '—', color: '#0d9488' },
               ].map(s => (
                 <div key={s.label} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
