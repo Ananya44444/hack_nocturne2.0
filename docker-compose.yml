@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  hospital-registry:
+    build:
+      context: ./services/hospital-registry
+    container_name: hospital-registry
+    ports:
+      - "9001:9001"
+    volumes:
+      - hospital_registry_data:/app/data
+    environment:
+      - DATABASE_URL=/app/data/hospital_registry.db
+
+  mpi-service:
+    build:
+      context: ./services/mpi-service
+    container_name: mpi-service
+    ports:
+      - "9000:9000"
+    volumes:
+      - mpi_data:/app/data
+    environment:
+      - DATABASE_PATH=/app/data/mpi.db
+
+  blockchain-audit-service:
+    build:
+      context: ./services/blockchain-audit-service
+    container_name: blockchain-audit-service
+    ports:
+      - "8005:8005"
+    volumes:
+      - blockchain_data:/app/data
+    env_file:
+      - ./services/blockchain-audit-service/.env
+    environment:
+      - DATABASE_PATH=/app/data/audit_events.db
+
+volumes:
+  hospital_registry_data:
+  mpi_data:
+  blockchain_data:
