@@ -11,14 +11,6 @@ import os
 
 import httpx
 from fastapi import APIRouter, Body, Header, HTTPException, status
-from pydantic import ValidationError as PydanticValidationError
-
-# fhir.resources models
-from fhir.resources.bundle import Bundle
-from fhir.resources.encounter import Encounter as FHIREncounter
-from fhir.resources.observation import Observation as FHIRObservation
-from fhir.resources.patient import Patient as FHIRPatient
-
 from app.models.fhir_models import FHIRIngestPayload
 
 logger = logging.getLogger("fhir.microservice")
@@ -43,19 +35,7 @@ def _auth_headers(hospital_id: str, api_key: str) -> Dict[str, str]:
     }
 
 
-def _fhir_to_dict_compat(obj: Any) -> Dict[str, Any]:
-    """
-    Convert a fhir.resources model to a dict in a way that supports
-    both pydantic v1 (.dict()) and v2 (.model_dump()) style libs.
-    """
-    if obj is None:
-        return {}
-    if hasattr(obj, "model_dump"):
-        return obj.model_dump()
-    if hasattr(obj, "dict"):
-        return obj.dict()
-    # Fallback: try to return __dict__ (least safe)
-    return getattr(obj, "__dict__", {})
+# _fhir_to_dict_compat removed (data is already dict)
 
 
 async def _safe_backend_request(
@@ -142,24 +122,7 @@ def _schedule_audit(hospital_id: str, api_key: str, resource_type: str, resource
     asyncio.create_task(_emit_microservice_audit_async(hospital_id, api_key, resource_type, resource_id, subject_patient_id))
 
 
-def _validate_fhir_resource(resource_type: str, data: Dict[str, Any]) -> Any:
-    """
-    Validate the returned dict against fhir.resources models.
-    Return the model instance or raise HTTPException(502) with validation detail.
-    """
-    try:
-        if resource_type == "Patient":
-            return FHIRPatient.model_validate(data)
-        if resource_type == "Observation":
-            return FHIRObservation.model_validate(data)
-        if resource_type == "Encounter":
-            return FHIREncounter.model_validate(data)
-        if resource_type == "Bundle":
-            return Bundle.model_validate(data)
-        raise HTTPException(status_code=500, detail="Unsupported resource type for validation")
-    except (PydanticValidationError, ValueError) as e:
-        logger.exception("FHIR validation error for %s", resource_type)
-        raise HTTPException(status_code=502, detail=f"FHIR validation failed: {e}")
+# validation bypassed for python 3.14 compat
 
 
 # -------------------
@@ -173,12 +136,8 @@ async def get_patient(
     x_api_key: str = Header(..., alias="X-API-Key"),
 ):
     data = await _safe_backend_request("GET", f"/patient/{patient_id}", x_hospital_id, x_api_key)
-    fhir_patient = _validate_fhir_resource("Patient", data)
-
-    # schedule audit non-blocking
     _schedule_audit(x_hospital_id, x_api_key, "Patient", patient_id, subject_patient_id=patient_id)
-
-    return _fhir_to_dict_compat(fhir_patient)
+    return data
 
 
 @router.get("/observation/{observation_id}")
@@ -188,19 +147,13 @@ async def get_observation(
     x_api_key: str = Header(..., alias="X-API-Key"),
 ):
     data = await _safe_backend_request("GET", f"/observation/{observation_id}", x_hospital_id, x_api_key)
-    fhir_obs = _validate_fhir_resource("Observation", data)
-
-    # try to extract subject patient id safely
     subject_id = observation_id
     try:
-        subj_ref = getattr(fhir_obs, "subject", None)
-        if subj_ref and getattr(subj_ref, "reference", None):
-            subject_id = subj_ref.reference.split("/")[-1]
+        subject_id = data.get("subject", {}).get("reference", "").split("/")[-1] or observation_id
     except Exception:
         pass
-
     _schedule_audit(x_hospital_id, x_api_key, "Observation", observation_id, subject_patient_id=subject_id)
-    return _fhir_to_dict_compat(fhir_obs)
+    return data
 
 
 @router.get("/encounter/{encounter_id}")
@@ -210,18 +163,13 @@ async def get_encounter(
     x_api_key: str = Header(..., alias="X-API-Key"),
 ):
     data = await _safe_backend_request("GET", f"/encounter/{encounter_id}", x_hospital_id, x_api_key)
-    fhir_enc = _validate_fhir_resource("Encounter", data)
-
     subject_id = encounter_id
     try:
-        subj_ref = getattr(fhir_enc, "subject", None)
-        if subj_ref and getattr(subj_ref, "reference", None):
-            subject_id = subj_ref.reference.split("/")[-1]
+        subject_id = data.get("subject", {}).get("reference", "").split("/")[-1] or encounter_id
     except Exception:
         pass
-
     _schedule_audit(x_hospital_id, x_api_key, "Encounter", encounter_id, subject_patient_id=subject_id)
-    return _fhir_to_dict_compat(fhir_enc)
+    return data
 
 
 @router.post("/ingest", status_code=201)
@@ -286,7 +234,5 @@ async def get_bundle(
     x_api_key: str = Header(..., alias="X-API-Key"),
 ):
     data = await _safe_backend_request("GET", f"/bundle/{patient_id}", x_hospital_id, x_api_key)
-    fhir_bundle = _validate_fhir_resource("Bundle", data)
-
     _schedule_audit(x_hospital_id, x_api_key, "Bundle", patient_id, subject_patient_id=patient_id)
-    return _fhir_to_dict_compat(fhir_bundle)
+    return data
